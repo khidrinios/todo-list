@@ -30,20 +30,42 @@ type Error struct {
 
 // GetTodoByIdResult defines model for GetTodoByIdResult.
 type GetTodoByIdResult struct {
-	CreatedAt   time.Time  `json:"created_at"`
-	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
-	Description *string    `json:"description,omitempty"`
-	Id          int        `json:"id"`
-	IsDone      bool       `json:"is_done"`
-	Title       string     `json:"title"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	CreatedAt   time.Time `json:"created_at"`
+	Description *string   `json:"description,omitempty"`
+	Id          int       `json:"id"`
+	IsDone      bool      `json:"is_done"`
+	Title       string    `json:"title"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// UpdateTodoRequestBody defines model for UpdateTodoRequestBody.
+type UpdateTodoRequestBody struct {
+	Description *string `json:"description,omitempty"`
+	IsDone      *bool   `json:"is_done,omitempty"`
+	Title       *string `json:"title,omitempty"`
+}
+
+// UpdateTodoResult defines model for UpdateTodoResult.
+type UpdateTodoResult struct {
+	CreatedAt   time.Time `json:"created_at"`
+	Description *string   `json:"description,omitempty"`
+	Id          int       `json:"id"`
+	IsDone      bool      `json:"is_done"`
+	Title       string    `json:"title"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // CreateTodoJSONBody defines parameters for CreateTodo.
 type CreateTodoJSONBody CreateTodoRequestBody
 
+// UpdateTodoJSONBody defines parameters for UpdateTodo.
+type UpdateTodoJSONBody UpdateTodoRequestBody
+
 // CreateTodoJSONRequestBody defines body for CreateTodo for application/json ContentType.
 type CreateTodoJSONRequestBody CreateTodoJSONBody
+
+// UpdateTodoJSONRequestBody defines body for UpdateTodo for application/json ContentType.
+type UpdateTodoJSONRequestBody UpdateTodoJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -53,6 +75,9 @@ type ServerInterface interface {
 	// Get Todo By Id
 	// (GET /todo/{id})
 	GetTodoById(w http.ResponseWriter, r *http.Request, id int)
+	// Update Todo
+	// (PUT /todo/{id})
+	UpdateTodo(w http.ResponseWriter, r *http.Request, id int)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -96,6 +121,32 @@ func (siw *ServerInterfaceWrapper) GetTodoById(w http.ResponseWriter, r *http.Re
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetTodoById(w, r, id)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// UpdateTodo operation middleware
+func (siw *ServerInterfaceWrapper) UpdateTodo(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameter("simple", false, "id", chi.URLParam(r, "id"), &id)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateTodo(w, r, id)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -223,6 +274,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/todo/{id}", wrapper.GetTodoById)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/todo/{id}", wrapper.UpdateTodo)
 	})
 
 	return r

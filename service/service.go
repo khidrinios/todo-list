@@ -27,3 +27,11 @@ func (s *Service) GetTodoById(id int) (*persistence.Todo, error) {
 	}
 	return todo, nil
 }
+
+func (s *Service) UpdateTodo(id int, title, description *string, isDone *bool) (*persistence.Todo, error) {
+	todo, err := s.postgres.UpdateTodo(id, title, description, isDone)
+	if err != nil {
+		return nil, err
+	}
+	return todo, nil
+}

@@ -56,15 +56,46 @@ components:
         updated_at:
           type: string
           format: date-time
-        deleted_at:
-          type: string
-          format: date-time        
       required:
         - id
         - title
         - is_done
         - created_at
         - updated_at
+
+    UpdateTodoResult:
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        is_done:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - is_done
+        - created_at
+        - updated_at
+
+    UpdateTodoRequestBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string   
+        is_done:
+          type: boolean       
+
 
 paths:
   '/todo':
@@ -107,13 +138,13 @@ paths:
       summary: Get Todo By Id
       operationId: GetTodoById
       parameters:
-          - name: id
-            in: path
-            description: Todo ID
-            required: true
-            schema:
-              type: integer
-              minimum: 1
+        - name: id
+          in: path
+          description: Todo ID
+          required: true
+          schema:
+            type: integer
+            minimum: 1
       responses:
         '200':
           description: Todo Retreived Successfully 
@@ -145,3 +176,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+    put:
+      summary: Update Todo
+      operationId: UpdateTodo
+      parameters:
+        - name: id
+          in: path
+          description: Todo ID
+          required: true
+          schema:
+            type: integer
+            minimum: 1      
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/UpdateTodoRequestBody"
+      responses:
+        '200':
+          description: Todo Updated
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/UpdateTodoResult'
+        '400':
+          description: Bad Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'                
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        'default':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'      

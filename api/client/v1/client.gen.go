@@ -36,20 +36,42 @@ type Error struct {
 
 // GetTodoByIdResult defines model for GetTodoByIdResult.
 type GetTodoByIdResult struct {
-	CreatedAt   time.Time  `json:"created_at"`
-	DeletedAt   *time.Time `json:"deleted_at,omitempty"`
-	Description *string    `json:"description,omitempty"`
-	Id          int        `json:"id"`
-	IsDone      bool       `json:"is_done"`
-	Title       string     `json:"title"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	CreatedAt   time.Time `json:"created_at"`
+	Description *string   `json:"description,omitempty"`
+	Id          int       `json:"id"`
+	IsDone      bool      `json:"is_done"`
+	Title       string    `json:"title"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// UpdateTodoRequestBody defines model for UpdateTodoRequestBody.
+type UpdateTodoRequestBody struct {
+	Description *string `json:"description,omitempty"`
+	IsDone      *bool   `json:"is_done,omitempty"`
+	Title       *string `json:"title,omitempty"`
+}
+
+// UpdateTodoResult defines model for UpdateTodoResult.
+type UpdateTodoResult struct {
+	CreatedAt   time.Time `json:"created_at"`
+	Description *string   `json:"description,omitempty"`
+	Id          int       `json:"id"`
+	IsDone      bool      `json:"is_done"`
+	Title       string    `json:"title"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // CreateTodoJSONBody defines parameters for CreateTodo.
 type CreateTodoJSONBody CreateTodoRequestBody
 
+// UpdateTodoJSONBody defines parameters for UpdateTodo.
+type UpdateTodoJSONBody UpdateTodoRequestBody
+
 // CreateTodoJSONRequestBody defines body for CreateTodo for application/json ContentType.
 type CreateTodoJSONRequestBody CreateTodoJSONBody
+
+// UpdateTodoJSONRequestBody defines body for UpdateTodo for application/json ContentType.
+type UpdateTodoJSONRequestBody UpdateTodoJSONBody
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -131,6 +153,11 @@ type ClientInterface interface {
 
 	// GetTodoById request
 	GetTodoById(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateTodo request with any body
+	UpdateTodoWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	UpdateTodo(ctx context.Context, id int, body UpdateTodoJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) CreateTodoWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -159,6 +186,30 @@ func (c *Client) CreateTodo(ctx context.Context, body CreateTodoJSONRequestBody,
 
 func (c *Client) GetTodoById(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTodoByIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateTodoWithBody(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateTodoRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) UpdateTodo(ctx context.Context, id int, body UpdateTodoJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateTodoRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -243,6 +294,53 @@ func NewGetTodoByIdRequest(server string, id int) (*http.Request, error) {
 	return req, nil
 }
 
+// NewUpdateTodoRequest calls the generic UpdateTodo builder with application/json body
+func NewUpdateTodoRequest(server string, id int, body UpdateTodoJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateTodoRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewUpdateTodoRequestWithBody generates requests for UpdateTodo with any type of body
+func NewUpdateTodoRequestWithBody(server string, id int, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/todo/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("PUT", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -293,6 +391,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetTodoById request
 	GetTodoByIdWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetTodoByIdResponse, error)
+
+	// UpdateTodo request with any body
+	UpdateTodoWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateTodoResponse, error)
+
+	UpdateTodoWithResponse(ctx context.Context, id int, body UpdateTodoJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateTodoResponse, error)
 }
 
 type CreateTodoResponse struct {
@@ -346,6 +449,32 @@ func (r GetTodoByIdResponse) StatusCode() int {
 	return 0
 }
 
+type UpdateTodoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *UpdateTodoResult
+	JSON400      *Error
+	JSON404      *Error
+	JSON500      *Error
+	JSONDefault  *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateTodoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateTodoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // CreateTodoWithBodyWithResponse request with arbitrary body returning *CreateTodoResponse
 func (c *ClientWithResponses) CreateTodoWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateTodoResponse, error) {
 	rsp, err := c.CreateTodoWithBody(ctx, contentType, body, reqEditors...)
@@ -370,6 +499,23 @@ func (c *ClientWithResponses) GetTodoByIdWithResponse(ctx context.Context, id in
 		return nil, err
 	}
 	return ParseGetTodoByIdResponse(rsp)
+}
+
+// UpdateTodoWithBodyWithResponse request with arbitrary body returning *UpdateTodoResponse
+func (c *ClientWithResponses) UpdateTodoWithBodyWithResponse(ctx context.Context, id int, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateTodoResponse, error) {
+	rsp, err := c.UpdateTodoWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateTodoResponse(rsp)
+}
+
+func (c *ClientWithResponses) UpdateTodoWithResponse(ctx context.Context, id int, body UpdateTodoJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateTodoResponse, error) {
+	rsp, err := c.UpdateTodo(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateTodoResponse(rsp)
 }
 
 // ParseCreateTodoResponse parses an HTTP response from a CreateTodoWithResponse call
@@ -435,6 +581,60 @@ func ParseGetTodoByIdResponse(rsp *http.Response) (*GetTodoByIdResponse, error) 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest GetTodoByIdResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateTodoResponse parses an HTTP response from a UpdateTodoWithResponse call
+func ParseUpdateTodoResponse(rsp *http.Response) (*UpdateTodoResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateTodoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest UpdateTodoResult
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
