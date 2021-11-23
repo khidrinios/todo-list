@@ -1,0 +1,79 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Todo App
+  description: Create and View Todos
+
+  contact:
+    name: Ibrahim Khidr
+    email: ibrahim.khidr@jumia.com
+
+servers:
+  - url: http://localhost:8080/
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+      - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+
+    CreateTodoResult:
+      properties:
+        id:
+          type: integer
+      required:
+        - id
+
+    CreateTodoRequestBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string          
+      required:
+        - title
+
+paths:
+  '/todo':
+    post:
+      summary: Create Todo
+      operationId: CreateTodo
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/CreateTodoRequestBody"
+      responses:
+        '201':
+          description: Todo Created
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/CreateTodoResult'
+        '400':
+          description: Bad Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        'default':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
