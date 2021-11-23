@@ -16,12 +16,10 @@ components:
     Error:
       type: object
       required:
-      - errors
+      - error
       properties:
-        errors:
-          type: array
-          items:
-            type: string
+        error:
+          type: string
 
     CreateTodoResult:
       properties:

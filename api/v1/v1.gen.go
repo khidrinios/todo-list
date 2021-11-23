@@ -25,7 +25,7 @@ type CreateTodoResult struct {
 
 // Error defines model for Error.
 type Error struct {
-	Errors []string `json:"errors"`
+	Error string `json:"error"`
 }
 
 // GetTodoByIdResult defines model for GetTodoByIdResult.

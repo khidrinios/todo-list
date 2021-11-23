@@ -22,8 +22,8 @@ func handleError(w http.ResponseWriter, r *http.Request, err error, message stri
 	if message == "" {
 		message = "Internal Error"
 	}
-	errors := Error{Errors: []string{message}}
+	error := Error{Error: message}
 	log.Error(err)
 	render.Status(r, status)
-	render.JSON(w, r, errors)
+	render.JSON(w, r, error)
 }
