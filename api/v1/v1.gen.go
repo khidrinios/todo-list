@@ -28,8 +28,17 @@ type Error struct {
 	Error string `json:"error"`
 }
 
-// GetTodoByIdResult defines model for GetTodoByIdResult.
-type GetTodoByIdResult struct {
+// QueryTodosRequestBody defines model for QueryTodosRequestBody.
+type QueryTodosRequestBody struct {
+	Description *string `json:"description,omitempty"`
+	IsDone      *bool   `json:"is_done,omitempty"`
+	Limit       int     `json:"limit"`
+	Offset      int     `json:"offset"`
+	Title       *string `json:"title,omitempty"`
+}
+
+// TodoResult defines model for TodoResult.
+type TodoResult struct {
 	CreatedAt   time.Time `json:"created_at"`
 	Description *string   `json:"description,omitempty"`
 	Id          int       `json:"id"`
@@ -58,11 +67,17 @@ type UpdateTodoResult struct {
 // CreateTodoJSONBody defines parameters for CreateTodo.
 type CreateTodoJSONBody CreateTodoRequestBody
 
+// QueryTodosJSONBody defines parameters for QueryTodos.
+type QueryTodosJSONBody QueryTodosRequestBody
+
 // UpdateTodoJSONBody defines parameters for UpdateTodo.
 type UpdateTodoJSONBody UpdateTodoRequestBody
 
 // CreateTodoJSONRequestBody defines body for CreateTodo for application/json ContentType.
 type CreateTodoJSONRequestBody CreateTodoJSONBody
+
+// QueryTodosJSONRequestBody defines body for QueryTodos for application/json ContentType.
+type QueryTodosJSONRequestBody QueryTodosJSONBody
 
 // UpdateTodoJSONRequestBody defines body for UpdateTodo for application/json ContentType.
 type UpdateTodoJSONRequestBody UpdateTodoJSONBody
@@ -72,6 +87,9 @@ type ServerInterface interface {
 	// Create Todo
 	// (POST /todo)
 	CreateTodo(w http.ResponseWriter, r *http.Request)
+	// Get Todos by Filter
+	// (POST /todo/query)
+	QueryTodos(w http.ResponseWriter, r *http.Request)
 	// Get Todo By Id
 	// (GET /todo/{id})
 	GetTodoById(w http.ResponseWriter, r *http.Request, id int)
@@ -95,6 +113,21 @@ func (siw *ServerInterfaceWrapper) CreateTodo(w http.ResponseWriter, r *http.Req
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateTodo(w, r)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// QueryTodos operation middleware
+func (siw *ServerInterfaceWrapper) QueryTodos(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.QueryTodos(w, r)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -271,6 +304,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/todo", wrapper.CreateTodo)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/todo/query", wrapper.QueryTodos)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/todo/{id}", wrapper.GetTodoById)

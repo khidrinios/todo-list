@@ -1,6 +1,8 @@
 package persistence
 
 import (
+	"strings"
+
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -52,4 +54,39 @@ func (p *PostgresConfig) UpdateTodo(id int, title, description *string, isDone *
 		return nil, result.Error
 	}
 	return &todo, nil
+}
+
+func (p *PostgresConfig) QueryTodos(title, description *string, isDone *bool, offset, limit int) ([]Todo, error) {
+	var todos []Todo
+	queryTodo := Todo{}
+	if isDone != nil {
+		queryTodo.IsDone = *isDone
+	}
+	var sb strings.Builder
+	if title != nil {
+		sb.WriteString("title LIKE '%")
+		sb.WriteString(*title)
+		sb.WriteString("%'")
+	}
+
+	if description != nil {
+		if title != nil {
+			sb.WriteString(" AND ")
+		}
+		sb.WriteString("description LIKE '%")
+		sb.WriteString(*description)
+		sb.WriteString("%'")
+	}
+
+	if title != nil || description != nil {
+		sb.WriteString(" AND ")
+	}
+	sb.WriteString("deleted_at is null")
+
+	result := p.db.Model(&Todo{}).Where(sb.String()).Limit(limit).Offset(offset).Find(&todos)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return todos, nil
 }

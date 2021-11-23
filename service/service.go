@@ -35,3 +35,11 @@ func (s *Service) UpdateTodo(id int, title, description *string, isDone *bool) (
 	}
 	return todo, nil
 }
+
+func (s *Service) QueryTodos(title, description *string, isDone *bool, offset, limit int) ([]persistence.Todo, error) {
+	todos, err := s.postgres.QueryTodos(title, description, isDone, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	return todos, nil
+}

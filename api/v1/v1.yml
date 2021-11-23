@@ -38,7 +38,7 @@ components:
       required:
         - title
 
-    GetTodoByIdResult:
+    TodoResult:
       properties:
         id:
           type: integer
@@ -94,6 +94,24 @@ components:
         is_done:
           type: boolean       
 
+    QueryTodosRequestBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        is_done:
+          type: boolean
+        offset:
+          type: integer
+          default: 1
+        limit:
+          type: integer
+          default: 1000
+      required:
+        - offset
+        - limit
 
 paths:
   '/todo':
@@ -149,7 +167,7 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '#/components/schemas/GetTodoByIdResult'
+                $ref: '#/components/schemas/TodoResult'
         '400':
           description: Bad Request Error
           content:
@@ -222,3 +240,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'      
+
+  '/todo/query':
+    post:
+      summary: Get Todos by Filter
+      operationId: QueryTodos
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: "#/components/schemas/QueryTodosRequestBody"
+      responses:
+        '200':
+          description: Todos Retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TodoResult'
+        '400':
+          description: Bad Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        'default':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'                
+                

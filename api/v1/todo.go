@@ -51,7 +51,7 @@ func (v *V1) GetTodoById(w http.ResponseWriter, r *http.Request, id int) {
 		return
 	}
 
-	res := GetTodoByIdResult{
+	res := TodoResult{
 		CreatedAt:   todo.CreatedAt,
 		Description: todo.Description,
 		Id:          int(todo.ID),
@@ -99,4 +99,35 @@ func (v *V1) UpdateTodo(w http.ResponseWriter, r *http.Request, id int) {
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, res)
 
+}
+
+func (v *V1) QueryTodos(w http.ResponseWriter, r *http.Request) {
+	var body QueryTodosRequestBody
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		handleError(w, r, err, err.Error(), http.StatusBadRequest)
+		return
+	}
+	res, err := v.svc.QueryTodos(body.Title, body.Description, body.IsDone, body.Offset, body.Limit)
+	if err != nil {
+		handleError(w, r, err, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	todos := make([]TodoResult, 0)
+	for i := range res {
+		todoRes := res[i]
+		todo := TodoResult{
+			CreatedAt:   todoRes.CreatedAt,
+			Description: todoRes.Description,
+			Id:          int(todoRes.ID),
+			IsDone:      todoRes.IsDone,
+			Title:       todoRes.Title,
+			UpdatedAt:   todoRes.UpdatedAt,
+		}
+		todos = append(todos, todo)
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, todos)
 }
