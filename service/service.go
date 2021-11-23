@@ -19,3 +19,11 @@ func (s *Service) CreateTodo(title string, description *string) (*int, error) {
 	}
 	return todoId, nil
 }
+
+func (s *Service) GetTodoById(id int) (*persistence.Todo, error) {
+	todo, err := s.postgres.GetTodoById(id)
+	if err != nil {
+		return nil, err
+	}
+	return todo, nil
+}

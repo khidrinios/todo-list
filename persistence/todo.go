@@ -22,3 +22,12 @@ func (p *PostgresConfig) CreateTodo(title string, description *string) (*int, er
 	todoId := int(todo.ID)
 	return &todoId, nil
 }
+
+func (p *PostgresConfig) GetTodoById(id int) (*Todo, error) {
+	todo := Todo{}
+	result := p.db.First(&todo, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &todo, nil
+}

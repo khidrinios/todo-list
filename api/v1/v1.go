@@ -2,11 +2,14 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
 	"khidr/todo/service"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/render"
 	"github.com/labstack/gommon/log"
+	"gorm.io/gorm"
 )
 
 type V1 struct {
@@ -42,6 +45,39 @@ func (v *V1) CreateTodo(w http.ResponseWriter, r *http.Request) {
 		Id: *todoId,
 	}
 	render.Status(r, http.StatusCreated)
+	render.JSON(w, r, res)
+}
+
+func (v *V1) GetTodoById(w http.ResponseWriter, r *http.Request, id int) {
+	if id < 1 {
+		handleError(w, r, nil, "Todo Id must be greater than zero", http.StatusBadRequest)
+		return
+	}
+
+	todo, err := v.svc.GetTodoById(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			handleError(w, r, err, err.Error(), http.StatusNotFound)
+			return
+		}
+		handleError(w, r, err, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	var deletedAt *time.Time
+	if todo.DeletedAt.Valid {
+		deletedAt = &todo.DeletedAt.Time
+	}
+
+	res := GetTodoByIdResult{
+		CreatedAt:   todo.CreatedAt,
+		DeletedAt:   deletedAt,
+		Description: todo.Description,
+		Id:          int(todo.ID),
+		IsDone:      todo.IsDone,
+		Title:       todo.Title,
+		UpdatedAt:   todo.UpdatedAt,
+	}
+	render.Status(r, http.StatusOK)
 	render.JSON(w, r, res)
 }
 

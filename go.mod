@@ -5,7 +5,7 @@ go 1.16
 require (
 	github.com/alexbrainman/sspi v0.0.0-20180613141037-e580b900e9f5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/deepmap/oapi-codegen v1.9.0 // indirect
+	github.com/deepmap/oapi-codegen v1.9.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/chi/v5 v5.0.0
 	github.com/go-chi/render v1.0.1

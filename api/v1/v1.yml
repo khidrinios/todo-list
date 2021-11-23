@@ -40,6 +40,32 @@ components:
       required:
         - title
 
+    GetTodoByIdResult:
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        is_done:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time        
+      required:
+        - id
+        - title
+        - is_done
+        - created_at
+        - updated_at
+
 paths:
   '/todo':
     post:
@@ -76,4 +102,46 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
+  '/todo/{id}':
+    get:
+      summary: Get Todo By Id
+      operationId: GetTodoById
+      parameters:
+          - name: id
+            in: path
+            description: Todo ID
+            required: true
+            schema:
+              type: integer
+              minimum: 1
+      responses:
+        '200':
+          description: Todo Retreived Successfully 
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/GetTodoByIdResult'
+        '400':
+          description: Bad Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        'default':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
