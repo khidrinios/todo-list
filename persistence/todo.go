@@ -62,6 +62,24 @@ func (p *PostgresConfig) QueryTodos(title, description *string, isDone *bool, of
 	if isDone != nil {
 		queryTodo.IsDone = *isDone
 	}
+	filter := buildTitleAndDescriptionSqlFilterString(title, description)
+	result := p.db.Model(&Todo{}).Where(filter).Limit(limit).Offset(offset).Find(&todos)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return todos, nil
+}
+
+func (p *PostgresConfig) DeleteTodoById(id int) (*int, error) {
+	result := p.db.Delete(&Todo{}, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &id, nil
+}
+
+func buildTitleAndDescriptionSqlFilterString(title, description *string) string {
 	var sb strings.Builder
 	if title != nil {
 		sb.WriteString("title LIKE '%")
@@ -77,19 +95,5 @@ func (p *PostgresConfig) QueryTodos(title, description *string, isDone *bool, of
 		sb.WriteString(*description)
 		sb.WriteString("%'")
 	}
-
-	result := p.db.Model(&Todo{}).Where(sb.String()).Limit(limit).Offset(offset).Find(&todos)
-
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return todos, nil
-}
-
-func (p *PostgresConfig) DeleteTodoById(id int) (*int, error) {
-	result := p.db.Delete(&Todo{}, id)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-	return &id, nil
+	return sb.String()
 }
