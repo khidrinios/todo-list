@@ -37,12 +37,17 @@ func (s *Service) UpdateTodo(id int, title, description *string, isDone *bool) (
 }
 
 func (s *Service) QueryTodos(title, description *string, isDone *bool, page, limit int) ([]persistence.Todo, error) {
-	offset := (page - 1) * limit
+	offset := getOffsetFromPageAndLimit(page, limit)
 	todos, err := s.postgres.QueryTodos(title, description, isDone, offset, limit)
 	if err != nil {
 		return nil, err
 	}
 	return todos, nil
+}
+
+func getOffsetFromPageAndLimit(page, limit int) int {
+	offset := (page - 1) * limit
+	return offset
 }
 
 func (s *Service) DeleteTodoById(id int) (*int, error) {
