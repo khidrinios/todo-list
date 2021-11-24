@@ -33,7 +33,7 @@ type QueryTodosRequestBody struct {
 	Description *string `json:"description,omitempty"`
 	IsDone      *bool   `json:"is_done,omitempty"`
 	Limit       int     `json:"limit"`
-	Offset      int     `json:"offset"`
+	Page        int     `json:"page"`
 	Title       *string `json:"title,omitempty"`
 }
 
@@ -90,6 +90,9 @@ type ServerInterface interface {
 	// Get Todos by Filter
 	// (POST /todo/query)
 	QueryTodos(w http.ResponseWriter, r *http.Request)
+	// Delete Todo By Id
+	// (DELETE /todo/{id})
+	DeleteTodoById(w http.ResponseWriter, r *http.Request, id int)
 	// Get Todo By Id
 	// (GET /todo/{id})
 	GetTodoById(w http.ResponseWriter, r *http.Request, id int)
@@ -128,6 +131,32 @@ func (siw *ServerInterfaceWrapper) QueryTodos(w http.ResponseWriter, r *http.Req
 
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.QueryTodos(w, r)
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler(w, r.WithContext(ctx))
+}
+
+// DeleteTodoById operation middleware
+func (siw *ServerInterfaceWrapper) DeleteTodoById(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameter("simple", false, "id", chi.URLParam(r, "id"), &id)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	var handler = func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteTodoById(w, r, id)
 	}
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -307,6 +336,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/todo/query", wrapper.QueryTodos)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/todo/{id}", wrapper.DeleteTodoById)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/todo/{id}", wrapper.GetTodoById)

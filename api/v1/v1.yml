@@ -103,14 +103,14 @@ components:
           type: string
         is_done:
           type: boolean
-        offset:
+        page:
           type: integer
           default: 1
         limit:
           type: integer
           default: 1000
       required:
-        - offset
+        - page
         - limit
 
 paths:
@@ -239,7 +239,54 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'      
+                $ref: '#/components/schemas/Error'   
+    delete:
+      summary: Delete Todo By Id
+      operationId: DeleteTodoById
+      parameters:
+        - name: id
+          in: path
+          description: Todo ID
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Todo Deleted Successfully 
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                required:
+                  - id
+        '400':
+          description: Bad Request Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        'default':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'         
 
   '/todo/query':
     post:

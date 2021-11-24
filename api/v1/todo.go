@@ -108,7 +108,7 @@ func (v *V1) QueryTodos(w http.ResponseWriter, r *http.Request) {
 		handleError(w, r, err, err.Error(), http.StatusBadRequest)
 		return
 	}
-	res, err := v.svc.QueryTodos(body.Title, body.Description, body.IsDone, body.Offset, body.Limit)
+	res, err := v.svc.QueryTodos(body.Title, body.Description, body.IsDone, body.Page, body.Limit)
 	if err != nil {
 		handleError(w, r, err, err.Error(), http.StatusInternalServerError)
 		return
@@ -130,4 +130,27 @@ func (v *V1) QueryTodos(w http.ResponseWriter, r *http.Request) {
 
 	render.Status(r, http.StatusOK)
 	render.JSON(w, r, todos)
+}
+
+func (v *V1) DeleteTodoById(w http.ResponseWriter, r *http.Request, id int) {
+	if id < 1 {
+		handleError(w, r, nil, "Todo Id must be greater than zero", http.StatusBadRequest)
+		return
+	}
+	deletedTodoId, err := v.svc.DeleteTodoById(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			handleError(w, r, err, err.Error(), http.StatusNotFound)
+			return
+		}
+		handleError(w, r, err, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res := map[string]interface{}{
+		"id": *deletedTodoId,
+	}
+
+	render.Status(r, http.StatusOK)
+	render.JSON(w, r, res)
 }

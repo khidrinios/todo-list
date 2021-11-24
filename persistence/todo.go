@@ -30,7 +30,7 @@ func (p *PostgresConfig) CreateTodo(title string, description *string) (*int, er
 
 func (p *PostgresConfig) GetTodoById(id int) (*Todo, error) {
 	todo := Todo{}
-	result := p.db.Where("deleted_at is null").First(&todo, id)
+	result := p.db.First(&todo, id)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -78,15 +78,18 @@ func (p *PostgresConfig) QueryTodos(title, description *string, isDone *bool, of
 		sb.WriteString("%'")
 	}
 
-	if title != nil || description != nil {
-		sb.WriteString(" AND ")
-	}
-	sb.WriteString("deleted_at is null")
-
 	result := p.db.Model(&Todo{}).Where(sb.String()).Limit(limit).Offset(offset).Find(&todos)
 
 	if result.Error != nil {
 		return nil, result.Error
 	}
 	return todos, nil
+}
+
+func (p *PostgresConfig) DeleteTodoById(id int) (*int, error) {
+	result := p.db.Delete(&Todo{}, id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return &id, nil
 }

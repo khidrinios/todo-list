@@ -39,7 +39,7 @@ type QueryTodosRequestBody struct {
 	Description *string `json:"description,omitempty"`
 	IsDone      *bool   `json:"is_done,omitempty"`
 	Limit       int     `json:"limit"`
-	Offset      int     `json:"offset"`
+	Page        int     `json:"page"`
 	Title       *string `json:"title,omitempty"`
 }
 
@@ -171,6 +171,9 @@ type ClientInterface interface {
 
 	QueryTodos(ctx context.Context, body QueryTodosJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteTodoById request
+	DeleteTodoById(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetTodoById request
 	GetTodoById(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -218,6 +221,18 @@ func (c *Client) QueryTodosWithBody(ctx context.Context, contentType string, bod
 
 func (c *Client) QueryTodos(ctx context.Context, body QueryTodosJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewQueryTodosRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) DeleteTodoById(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteTodoByIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -340,6 +355,40 @@ func NewQueryTodosRequestWithBody(server string, contentType string, body io.Rea
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteTodoByIdRequest generates requests for DeleteTodoById
+func NewDeleteTodoByIdRequest(server string, id int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/todo/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("DELETE", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -478,6 +527,9 @@ type ClientWithResponsesInterface interface {
 
 	QueryTodosWithResponse(ctx context.Context, body QueryTodosJSONRequestBody, reqEditors ...RequestEditorFn) (*QueryTodosResponse, error)
 
+	// DeleteTodoById request
+	DeleteTodoByIdWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteTodoByIdResponse, error)
+
 	// GetTodoById request
 	GetTodoByIdWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GetTodoByIdResponse, error)
 
@@ -531,6 +583,34 @@ func (r QueryTodosResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r QueryTodosResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type DeleteTodoByIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		Id int `json:"id"`
+	}
+	JSON400     *Error
+	JSON404     *Error
+	JSON500     *Error
+	JSONDefault *Error
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteTodoByIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteTodoByIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -621,6 +701,15 @@ func (c *ClientWithResponses) QueryTodosWithResponse(ctx context.Context, body Q
 		return nil, err
 	}
 	return ParseQueryTodosResponse(rsp)
+}
+
+// DeleteTodoByIdWithResponse request returning *DeleteTodoByIdResponse
+func (c *ClientWithResponses) DeleteTodoByIdWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*DeleteTodoByIdResponse, error) {
+	rsp, err := c.DeleteTodoById(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteTodoByIdResponse(rsp)
 }
 
 // GetTodoByIdWithResponse request returning *GetTodoByIdResponse
@@ -723,6 +812,62 @@ func ParseQueryTodosResponse(rsp *http.Response) (*QueryTodosResponse, error) {
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteTodoByIdResponse parses an HTTP response from a DeleteTodoByIdWithResponse call
+func ParseDeleteTodoByIdResponse(rsp *http.Response) (*DeleteTodoByIdResponse, error) {
+	bodyBytes, err := ioutil.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteTodoByIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Id int `json:"id"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest Error

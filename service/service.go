@@ -36,10 +36,19 @@ func (s *Service) UpdateTodo(id int, title, description *string, isDone *bool) (
 	return todo, nil
 }
 
-func (s *Service) QueryTodos(title, description *string, isDone *bool, offset, limit int) ([]persistence.Todo, error) {
+func (s *Service) QueryTodos(title, description *string, isDone *bool, page, limit int) ([]persistence.Todo, error) {
+	offset := (page - 1) * limit
 	todos, err := s.postgres.QueryTodos(title, description, isDone, offset, limit)
 	if err != nil {
 		return nil, err
 	}
 	return todos, nil
+}
+
+func (s *Service) DeleteTodoById(id int) (*int, error) {
+	todoId, err := s.postgres.DeleteTodoById(id)
+	if err != nil {
+		return nil, err
+	}
+	return todoId, nil
 }
