@@ -11,4 +11,6 @@ func TodoRouteInit(apiGroup *gin.RouterGroup, controller todo.Controller) {
 	todos.POST("/", controller.CreateTodo)
 	todos.GET("/:id", controller.GetTodoById)
 	todos.POST("/query", controller.QueryTodos)
+	todos.DELETE("/:id", controller.DeleteTodoById)
+	todos.PUT("/:id", controller.UpdateTodo)
 }

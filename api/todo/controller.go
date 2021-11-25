@@ -70,6 +70,36 @@ func (ctrl Controller) QueryTodos(c *gin.Context) {
 	handleResponse(c, http.StatusOK, res)
 }
 
+func (ctrl Controller) DeleteTodoById(c *gin.Context) {
+	req, err := ctrl.handler.DeleteTodoById(c)
+	if err != nil {
+		handleResponseError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := ctrl.service.DeleteTodoById(req)
+	if err != nil {
+		handleResponseError(c, http.StatusInternalServerError, err)
+		return
+	}
+	handleResponse(c, http.StatusOK, res)
+}
+
+func (ctrl Controller) UpdateTodo(c *gin.Context) {
+	reqParam, reqBody, err := ctrl.handler.UpdateTodo(c)
+	if err != nil {
+		handleResponseError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := ctrl.service.UpdateTodo(*reqParam, *reqBody)
+	if err != nil {
+		handleResponseError(c, http.StatusInternalServerError, err)
+		return
+	}
+	handleResponse(c, http.StatusOK, res)
+}
+
 func handleResponse(c *gin.Context, statusCode int, response interface{}) {
 	c.JSON(statusCode, response)
 }

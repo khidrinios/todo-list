@@ -18,8 +18,8 @@ func (h Handler) CreateTodo(c *gin.Context) (todo.CreateTodoRequestBody, error) 
 	return *request, err
 }
 
-func (h Handler) GetTodoById(c *gin.Context) (todo.GetTodoByIdRequestUri, error) {
-	request := new(todo.GetTodoByIdRequestUri)
+func (h Handler) GetTodoById(c *gin.Context) (todo.TodoByIdRequestUri, error) {
+	request := new(todo.TodoByIdRequestUri)
 	err := c.ShouldBindUri(request)
 	return *request, err
 }
@@ -28,4 +28,21 @@ func (h Handler) QueryTodos(c *gin.Context) (todo.QueryTodosRequestBody, error) 
 	request := new(todo.QueryTodosRequestBody)
 	err := c.ShouldBindJSON(request)
 	return *request, err
+}
+
+func (h Handler) DeleteTodoById(c *gin.Context) (todo.TodoByIdRequestUri, error) {
+	request := new(todo.TodoByIdRequestUri)
+	err := c.ShouldBindUri(request)
+	return *request, err
+}
+
+func (h Handler) UpdateTodo(c *gin.Context) (*todo.TodoByIdRequestUri, *todo.UpdateTodoRequestBody, error) {
+	requestParam := new(todo.TodoByIdRequestUri)
+	err := c.ShouldBindUri(requestParam)
+	if err != nil {
+		return nil, nil, err
+	}
+	requestBody := new(todo.UpdateTodoRequestBody)
+	err = c.ShouldBindJSON(requestBody)
+	return requestParam, requestBody, err
 }
