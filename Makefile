@@ -9,7 +9,7 @@ BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
 generate:
 	@echo :: getting generator
 	go get -v -d
-	go get github.com/deepmap/oapi-codegen/cmd/oapi-codegen
+	go get -d github.com/deepmap/oapi-codegen/cmd/oapi-codegen@v1.8.2
 
 	@echo :: generating code
 
