@@ -1,10 +1,12 @@
 package todo
 
 import (
+	"errors"
 	"khidr/todo/interfaces/api/todo"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 type Controller struct {
@@ -32,6 +34,40 @@ func (ctrl Controller) CreateTodo(c *gin.Context) {
 		return
 	}
 	handleResponse(c, http.StatusCreated, res)
+}
+
+func (ctrl Controller) GetTodoById(c *gin.Context) {
+	req, err := ctrl.handler.GetTodoById(c)
+	if err != nil {
+		handleResponseError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := ctrl.service.GetTodoById(req)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			handleResponseError(c, http.StatusNotFound, err)
+			return
+		}
+		handleResponseError(c, http.StatusInternalServerError, err)
+		return
+	}
+	handleResponse(c, http.StatusOK, res)
+}
+
+func (ctrl Controller) QueryTodos(c *gin.Context) {
+	req, err := ctrl.handler.QueryTodos(c)
+	if err != nil {
+		handleResponseError(c, http.StatusBadRequest, err)
+		return
+	}
+
+	res, err := ctrl.service.QueryTodos(req)
+	if err != nil {
+		handleResponseError(c, http.StatusInternalServerError, err)
+		return
+	}
+	handleResponse(c, http.StatusOK, res)
 }
 
 func handleResponse(c *gin.Context, statusCode int, response interface{}) {

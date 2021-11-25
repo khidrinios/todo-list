@@ -17,3 +17,15 @@ func (h Handler) CreateTodo(c *gin.Context) (todo.CreateTodoRequestBody, error) 
 	err := c.ShouldBindJSON(request)
 	return *request, err
 }
+
+func (h Handler) GetTodoById(c *gin.Context) (todo.GetTodoByIdRequestUri, error) {
+	request := new(todo.GetTodoByIdRequestUri)
+	err := c.ShouldBindUri(request)
+	return *request, err
+}
+
+func (h Handler) QueryTodos(c *gin.Context) (todo.QueryTodosRequestBody, error) {
+	request := new(todo.QueryTodosRequestBody)
+	err := c.ShouldBindJSON(request)
+	return *request, err
+}
