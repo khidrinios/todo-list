@@ -12,7 +12,7 @@ type TodoIdResult struct {
 }
 
 type TodoByIdRequestUri struct {
-	ID int `uri:"id" binding:"required,min=1"`
+	ID int `uri:"todo_id" binding:"required,min=1"`
 }
 
 type TodoResult struct {

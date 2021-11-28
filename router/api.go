@@ -1,6 +1,7 @@
 package router
 
 import (
+	"khidr/todo/api/item"
 	"khidr/todo/api/todo"
 	"khidr/todo/persistence"
 	"log"
@@ -20,15 +21,19 @@ func InitAPI(dsn string) *gin.Engine {
 
 	//init services
 	todoSvc := todo.NewService(postgresConfig)
+	itemSvc := item.NewService(postgresConfig)
 
 	// init handlers
 	todoHandler := todo.NewHandler()
+	itemHandler := item.NewHandler()
 
 	//init controllers
 	todoController := todo.NewController(todoSvc, todoHandler)
+	itemController := item.NewController(itemSvc, itemHandler)
 
 	//init routers
 	TodoRouteInit(apiV1, todoController)
+	ItemRouteInit(apiV1, itemController)
 
 	return router
 }
