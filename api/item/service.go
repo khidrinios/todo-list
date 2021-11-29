@@ -15,16 +15,16 @@ func NewService(postgres *persistence.PostgresConfig) *Service {
 	}
 }
 
-func (s *Service) AddItemToTodo(reqParam item.TodoIdRequestUri, reqbody item.AddItemToTodoRequestBody) (*item.AddItemToTodoResult, error) {
+func (s *Service) AddItemToTodo(reqParam item.TodoIdRequestUri, reqbody item.AddItemToTodoRequestBody) (*item.ItemIdResult, error) {
 	itemId, err := s.postgres.AddItemToTodo(reqParam.TodoID, reqbody.Title, reqbody.Description)
 	if err != nil {
 		return nil, err
 	}
-	return &item.AddItemToTodoResult{Id: *itemId}, nil
+	return &item.ItemIdResult{Id: *itemId}, nil
 }
 
-func (s *Service) GetItemByIdAndTodoId(req item.ItemIdTodoIdRequestUri) (*item.ItemResult, error) {
-	itemRes, err := s.postgres.GetItemByIdAndTodoId(req.TodoID, req.ItemID)
+func (s *Service) GetItem(req item.ItemIdTodoIdRequestUri) (*item.ItemResult, error) {
+	itemRes, err := s.postgres.GetItem(req.TodoID, req.ItemID)
 	if err != nil {
 		return nil, err
 	}
@@ -35,5 +35,15 @@ func (s *Service) GetItemByIdAndTodoId(req item.ItemIdTodoIdRequestUri) (*item.I
 		IsDone:      itemRes.IsDone,
 		Title:       itemRes.Title,
 		UpdatedAt:   itemRes.UpdatedAt,
+	}, nil
+}
+
+func (s *Service) DeleteItem(req item.ItemIdTodoIdRequestUri) (*item.ItemIdResult, error) {
+	itemId, err := s.postgres.DeleteItem(req.TodoID, req.ItemID)
+	if err != nil {
+		return nil, err
+	}
+	return &item.ItemIdResult{
+		Id: *itemId,
 	}, nil
 }

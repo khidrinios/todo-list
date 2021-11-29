@@ -34,13 +34,27 @@ func (ctrl Controller) AddItemToTodo(c *gin.Context) {
 	api.HandleResponse(c, http.StatusCreated, res)
 }
 
-func (ctrl Controller) GetItemByIdAndTodoId(c *gin.Context) {
-	req, err := ctrl.handler.GetItemByIdAndTodoId(c)
+func (ctrl Controller) GetItem(c *gin.Context) {
+	req, err := ctrl.handler.GetItem(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
-	res, err := ctrl.service.GetItemByIdAndTodoId(*req)
+	res, err := ctrl.service.GetItem(*req)
+	if err != nil {
+		api.HandleResponseError(c, http.StatusInternalServerError, err)
+		return
+	}
+	api.HandleResponse(c, http.StatusOK, res)
+}
+
+func (ctrl Controller) DeleteItem(c *gin.Context) {
+	req, err := ctrl.handler.DeleteItem(c)
+	if err != nil {
+		api.HandleResponseError(c, http.StatusBadRequest, err)
+		return
+	}
+	res, err := ctrl.service.DeleteItem(*req)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return

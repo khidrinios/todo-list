@@ -9,5 +9,6 @@ import (
 func ItemRouteInit(apiGroup *gin.RouterGroup, controller item.Controller) {
 	items := apiGroup.Group("todo/:todo_id/item")
 	items.POST("/", controller.AddItemToTodo)
-	items.GET("/:item_id", controller.GetItemByIdAndTodoId)
+	items.GET("/:item_id", controller.GetItem)
+	items.DELETE("/:item_id", controller.DeleteItem)
 }

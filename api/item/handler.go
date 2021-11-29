@@ -23,7 +23,13 @@ func (h Handler) AddItemToTodo(c *gin.Context) (*item.TodoIdRequestUri, *item.Ad
 	return requestParam, requestBody, err
 }
 
-func (h Handler) GetItemByIdAndTodoId(c *gin.Context) (*item.ItemIdTodoIdRequestUri, error) {
+func (h Handler) GetItem(c *gin.Context) (*item.ItemIdTodoIdRequestUri, error) {
+	requestParam := new(item.ItemIdTodoIdRequestUri)
+	err := c.ShouldBindUri(requestParam)
+	return requestParam, err
+}
+
+func (h Handler) DeleteItem(c *gin.Context) (*item.ItemIdTodoIdRequestUri, error) {
 	requestParam := new(item.ItemIdTodoIdRequestUri)
 	err := c.ShouldBindUri(requestParam)
 	return requestParam, err

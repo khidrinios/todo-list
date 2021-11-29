@@ -11,7 +11,7 @@ type AddItemToTodoRequestBody struct {
 	Description *string `json:"description,omitempty"`
 }
 
-type AddItemToTodoResult struct {
+type ItemIdResult struct {
 	Id int `json:"id" binding:"required"`
 }
 
