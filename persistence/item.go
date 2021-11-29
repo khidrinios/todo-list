@@ -47,3 +47,12 @@ func (p *PostgresConfig) DeleteItem(todoId, itemId int) (*int, error) {
 	}
 	return &itemId, nil
 }
+
+func (p *PostgresConfig) GetItemsByTodoId(todoId int) ([]Item, error) {
+	var items []Item
+	result := p.db.Find(&items, Item{TodoID: todoId})
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return items, nil
+}

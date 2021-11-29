@@ -28,6 +28,22 @@ func (s *Service) GetTodoById(req todo.TodoByIdRequestUri) (*todo.TodoResult, er
 	if err != nil {
 		return nil, err
 	}
+	items, err := s.postgres.GetItemsByTodoId(req.ID)
+	if err != nil {
+		return nil, err
+	}
+	itemsRes := make([]todo.Item, 0)
+	for i := range items {
+		item := items[i]
+		itemsRes = append(itemsRes, todo.Item{
+			CreatedAt:   item.CreatedAt,
+			Description: item.Description,
+			Id:          int(item.ID),
+			IsDone:      item.IsDone,
+			Title:       item.Title,
+			UpdatedAt:   item.UpdatedAt,
+		})
+	}
 	return &todo.TodoResult{
 		CreatedAt:   todoRes.CreatedAt,
 		Description: todoRes.Description,
@@ -35,6 +51,7 @@ func (s *Service) GetTodoById(req todo.TodoByIdRequestUri) (*todo.TodoResult, er
 		IsDone:      todoRes.IsDone,
 		Title:       todoRes.Title,
 		UpdatedAt:   todoRes.UpdatedAt,
+		Items:       itemsRes,
 	}, nil
 }
 
