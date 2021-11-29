@@ -15,5 +15,6 @@ func Init(dsn string) (*PostgresConfig, error) {
 		return nil, err
 	}
 	db.AutoMigrate(&Todo{})
+	db.AutoMigrate(&Item{})
 	return &PostgresConfig{db: db}, nil
 }

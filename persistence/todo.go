@@ -1,15 +1,19 @@
 package persistence
 
 import (
+	"database/sql"
 	"strings"
+	"time"
 
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 type Todo struct {
-	gorm.Model
-	Title       string
+	ID          uint      `gorm:"primarykey"`
+	CreatedAt   time.Time `gorm:"uniqueIndex:todo_idx_title_createdat"`
+	UpdatedAt   time.Time
+	DeletedAt   sql.NullTime `gorm:"index"`
+	Title       string       `gorm:"uniqueIndex:todo_idx_title_createdat"`
 	Description *string
 	IsDone      bool
 }
@@ -38,13 +42,13 @@ func (p *PostgresConfig) GetTodoById(id int) (*Todo, error) {
 }
 
 func (p *PostgresConfig) UpdateTodo(id int, title, description *string, isDone *bool) (*Todo, error) {
-	todo := Todo{Model: gorm.Model{ID: uint(id)}}
+	todo := Todo{ID: uint(id)}
 	updateBody := Todo{}
 	if title != nil {
 		updateBody.Title = *title
 	}
 	if description != nil {
-		updateBody.Description = *&description
+		updateBody.Description = description
 	}
 	if isDone != nil {
 		updateBody.IsDone = *isDone
