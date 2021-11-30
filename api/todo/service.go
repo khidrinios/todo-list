@@ -15,7 +15,7 @@ func NewService(postgres *persistence.PostgresConfig) *Service {
 	}
 }
 
-func (s *Service) CreateTodo(req todo.CreateTodoRequestBody) (*todo.TodoIdResult, error) {
+func (s *Service) Create(req todo.CreateRequest) (*todo.TodoIdResult, error) {
 	todoId, err := s.postgres.CreateTodo(req.Title, req.Description)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (s *Service) QueryTodos(req todo.QueryTodosRequestBody) ([]todo.TodoResult,
 	if err != nil {
 		return nil, err
 	}
-	todosRes := make([]todo.TodoResult, 0)
+	todosRes := make([]todo.TodoResult, len(todos))
 	for i := range todos {
 		res := todos[i]
 		todoRes := todo.TodoResult{

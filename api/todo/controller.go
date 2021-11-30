@@ -23,13 +23,13 @@ func NewController(service todo.Service, handler Handler) Controller {
 }
 
 func (ctrl Controller) CreateTodo(c *gin.Context) {
-	req, err := ctrl.handler.CreateTodo(c)
+	req, err := ctrl.handler.Create(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	res, err := ctrl.service.CreateTodo(req)
+	res, err := ctrl.service.Create(req)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
@@ -56,7 +56,7 @@ func (ctrl Controller) GetTodoById(c *gin.Context) {
 	api.HandleResponse(c, http.StatusOK, res)
 }
 
-func (ctrl Controller) QueryTodos(c *gin.Context) {
+func (ctrl Controller) ListTodos(c *gin.Context) {
 	req, err := ctrl.handler.QueryTodos(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)

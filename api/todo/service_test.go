@@ -11,7 +11,7 @@ import (
 func TestService_CreateTodo(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mockService := new(mocks.Service)
-		request := i.CreateTodoRequestBody{Title: "Todo 1"}
+		request := i.CreateRequest{Title: "Todo 1"}
 		mockService.On("CreateTodo", request).Return(&i.TodoIdResult{
 			Id: 1,
 		}, nil)

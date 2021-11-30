@@ -2,7 +2,7 @@ package todo
 
 import "time"
 
-type CreateTodoRequestBody struct {
+type CreateRequest struct {
 	Description *string `json:"description,omitempty"`
 	Title       string  `json:"title" binding:"required"`
 }

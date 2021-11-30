@@ -12,8 +12,8 @@ func NewHandler() Handler {
 	return Handler{}
 }
 
-func (h Handler) CreateTodo(c *gin.Context) (todo.CreateTodoRequestBody, error) {
-	request := new(todo.CreateTodoRequestBody)
+func (h Handler) Create(c *gin.Context) (todo.CreateRequest, error) {
+	request := new(todo.CreateRequest)
 	err := c.ShouldBindJSON(request)
 	return *request, err
 }

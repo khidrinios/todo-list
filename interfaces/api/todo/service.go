@@ -1,7 +1,7 @@
 package todo
 
 type Service interface {
-	CreateTodo(req CreateTodoRequestBody) (*TodoIdResult, error)
+	Create(req CreateRequest) (*TodoIdResult, error)
 	GetTodoById(req TodoByIdRequestUri) (*TodoResult, error)
 	QueryTodos(req QueryTodosRequestBody) ([]TodoResult, error)
 	DeleteTodoById(req TodoByIdRequestUri) (*TodoIdResult, error)

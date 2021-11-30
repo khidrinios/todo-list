@@ -14,11 +14,11 @@ type Service struct {
 }
 
 // CreateTodo provides a mock function with given fields: req
-func (_m *Service) CreateTodo(req todo.CreateTodoRequestBody) (*todo.TodoIdResult, error) {
+func (_m *Service) CreateTodo(req todo.CreateRequest) (*todo.TodoIdResult, error) {
 	ret := _m.Called(req)
 
 	var r0 *todo.TodoIdResult
-	if rf, ok := ret.Get(0).(func(todo.CreateTodoRequestBody) *todo.TodoIdResult); ok {
+	if rf, ok := ret.Get(0).(func(todo.CreateRequest) *todo.TodoIdResult); ok {
 		r0 = rf(req)
 	} else {
 		if ret.Get(0) != nil {
@@ -27,7 +27,7 @@ func (_m *Service) CreateTodo(req todo.CreateTodoRequestBody) (*todo.TodoIdResul
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(todo.CreateTodoRequestBody) error); ok {
+	if rf, ok := ret.Get(1).(func(todo.CreateRequest) error); ok {
 		r1 = rf(req)
 	} else {
 		r1 = ret.Error(1)
