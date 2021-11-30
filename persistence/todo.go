@@ -18,7 +18,7 @@ type Todo struct {
 	IsDone      bool
 }
 
-func (p *PostgresConfig) CreateTodo(title string, description *string) (*int, error) {
+func (p *PostgresConfig) Create(title string, description *string) (*int, error) {
 	todo := Todo{
 		Title:       title,
 		Description: description,

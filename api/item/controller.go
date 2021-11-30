@@ -20,13 +20,13 @@ func NewController(service item.Service, handler Handler) Controller {
 	}
 }
 
-func (ctrl Controller) AddItemToTodo(c *gin.Context) {
-	reqParam, reqBody, err := ctrl.handler.AddItemToTodo(c)
+func (ctrl Controller) AddToTodo(c *gin.Context) {
+	reqParam, reqBody, err := ctrl.handler.AddToTodo(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
-	res, err := ctrl.service.AddItemToTodo(*reqParam, *reqBody)
+	res, err := ctrl.service.AddToTodo(*reqParam, *reqBody)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
@@ -34,13 +34,13 @@ func (ctrl Controller) AddItemToTodo(c *gin.Context) {
 	api.HandleResponse(c, http.StatusCreated, res)
 }
 
-func (ctrl Controller) GetItem(c *gin.Context) {
-	req, err := ctrl.handler.GetItem(c)
+func (ctrl Controller) Get(c *gin.Context) {
+	req, err := ctrl.handler.Get(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
-	res, err := ctrl.service.GetItem(*req)
+	res, err := ctrl.service.Get(*req)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
@@ -48,13 +48,13 @@ func (ctrl Controller) GetItem(c *gin.Context) {
 	api.HandleResponse(c, http.StatusOK, res)
 }
 
-func (ctrl Controller) DeleteItem(c *gin.Context) {
-	req, err := ctrl.handler.DeleteItem(c)
+func (ctrl Controller) Delete(c *gin.Context) {
+	req, err := ctrl.handler.Delete(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
-	res, err := ctrl.service.DeleteItem(*req)
+	res, err := ctrl.service.Delete(*req)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return

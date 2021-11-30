@@ -22,7 +22,7 @@ func NewController(service todo.Service, handler Handler) Controller {
 	}
 }
 
-func (ctrl Controller) CreateTodo(c *gin.Context) {
+func (ctrl Controller) Create(c *gin.Context) {
 	req, err := ctrl.handler.Create(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
@@ -37,14 +37,14 @@ func (ctrl Controller) CreateTodo(c *gin.Context) {
 	api.HandleResponse(c, http.StatusCreated, res)
 }
 
-func (ctrl Controller) GetTodoById(c *gin.Context) {
-	req, err := ctrl.handler.GetTodoById(c)
+func (ctrl Controller) GetById(c *gin.Context) {
+	req, err := ctrl.handler.GetById(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	res, err := ctrl.service.GetTodoById(req)
+	res, err := ctrl.service.GetById(req)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			api.HandleResponseError(c, http.StatusNotFound, err)
@@ -56,14 +56,14 @@ func (ctrl Controller) GetTodoById(c *gin.Context) {
 	api.HandleResponse(c, http.StatusOK, res)
 }
 
-func (ctrl Controller) ListTodos(c *gin.Context) {
-	req, err := ctrl.handler.QueryTodos(c)
+func (ctrl Controller) List(c *gin.Context) {
+	req, err := ctrl.handler.List(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	res, err := ctrl.service.QueryTodos(req)
+	res, err := ctrl.service.List(req)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
@@ -71,14 +71,14 @@ func (ctrl Controller) ListTodos(c *gin.Context) {
 	api.HandleResponse(c, http.StatusOK, res)
 }
 
-func (ctrl Controller) DeleteTodoById(c *gin.Context) {
-	req, err := ctrl.handler.DeleteTodoById(c)
+func (ctrl Controller) DeleteById(c *gin.Context) {
+	req, err := ctrl.handler.DeleteById(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	res, err := ctrl.service.DeleteTodoById(req)
+	res, err := ctrl.service.DeleteById(req)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
@@ -86,14 +86,14 @@ func (ctrl Controller) DeleteTodoById(c *gin.Context) {
 	api.HandleResponse(c, http.StatusOK, res)
 }
 
-func (ctrl Controller) UpdateTodo(c *gin.Context) {
-	reqParam, reqBody, err := ctrl.handler.UpdateTodo(c)
+func (ctrl Controller) Update(c *gin.Context) {
+	reqParam, reqBody, err := ctrl.handler.Update(c)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
 
-	res, err := ctrl.service.UpdateTodo(*reqParam, *reqBody)
+	res, err := ctrl.service.Update(*reqParam, *reqBody)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
