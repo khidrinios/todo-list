@@ -43,7 +43,6 @@ func (ctrl Controller) GetById(c *gin.Context) {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
-
 	res, err := ctrl.service.GetById(req)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -68,7 +67,19 @@ func (ctrl Controller) List(c *gin.Context) {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	api.HandleResponse(c, http.StatusOK, res)
+	todosRes := make([]todo.TodoResult, len(res))
+	for i := range res {
+		todoRes := todo.TodoResult{
+			CreatedAt:   res[i].CreatedAt,
+			Description: res[i].Description,
+			Id:          int(res[i].ID),
+			IsDone:      res[i].IsDone,
+			Title:       res[i].Title,
+			UpdatedAt:   res[i].UpdatedAt,
+		}
+		todosRes = append(todosRes, todoRes)
+	}
+	api.HandleResponse(c, http.StatusOK, todosRes)
 }
 
 func (ctrl Controller) DeleteById(c *gin.Context) {

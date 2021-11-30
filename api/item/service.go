@@ -2,21 +2,20 @@ package item
 
 import (
 	"khidr/todo/interfaces/api/item"
-	"khidr/todo/persistence"
 )
 
 type Service struct {
-	postgres *persistence.PostgresConfig
+	repo item.Repository
 }
 
-func NewService(postgres *persistence.PostgresConfig) *Service {
+func NewService(postgres item.Repository) *Service {
 	return &Service{
-		postgres: postgres,
+		repo: postgres,
 	}
 }
 
 func (s *Service) AddToTodo(reqParam item.TodoIdRequestUri, reqbody item.AddItemToTodoRequestBody) (*item.ItemIdResult, error) {
-	itemId, err := s.postgres.AddItemToTodo(reqParam.TodoID, reqbody.Title, reqbody.Description)
+	itemId, err := s.repo.AddItemToTodo(reqParam.TodoID, reqbody.Title, reqbody.Description)
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +23,7 @@ func (s *Service) AddToTodo(reqParam item.TodoIdRequestUri, reqbody item.AddItem
 }
 
 func (s *Service) Get(req item.ItemIdTodoIdRequestUri) (*item.ItemResult, error) {
-	itemRes, err := s.postgres.GetItem(req.TodoID, req.ItemID)
+	itemRes, err := s.repo.GetItem(req.TodoID, req.ItemID)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +38,7 @@ func (s *Service) Get(req item.ItemIdTodoIdRequestUri) (*item.ItemResult, error)
 }
 
 func (s *Service) Delete(req item.ItemIdTodoIdRequestUri) (*item.ItemIdResult, error) {
-	itemId, err := s.postgres.DeleteItem(req.TodoID, req.ItemID)
+	itemId, err := s.repo.DeleteItem(req.TodoID, req.ItemID)
 	if err != nil {
 		return nil, err
 	}

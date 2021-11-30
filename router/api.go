@@ -3,7 +3,7 @@ package router
 import (
 	"khidr/todo/api/item"
 	"khidr/todo/api/todo"
-	"khidr/todo/persistence"
+	"khidr/todo/db"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -11,17 +11,22 @@ import (
 
 func InitAPI(dsn string) *gin.Engine {
 	router := gin.Default()
+	HealthCheckInitRoute(router)
 	apiV1 := router.Group("/api/v1")
 
 	//init persistence
-	postgresConfig, err := persistence.Init(dsn)
+	database, err := db.Init(dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	//init repos
+	todoRepo := todo.NewRepository(database)
+	itemRepo := item.NewRepository(database)
+
 	//init services
-	todoSvc := todo.NewService(postgresConfig)
-	itemSvc := item.NewService(postgresConfig)
+	todoSvc := todo.NewService(todoRepo)
+	itemSvc := item.NewService(itemRepo)
 
 	// init handlers
 	todoHandler := todo.NewHandler()
