@@ -2,6 +2,7 @@ package item
 
 import (
 	"khidr/todo/interfaces/api/item"
+	"khidr/todo/models"
 )
 
 type Service struct {
@@ -45,4 +46,8 @@ func (s *Service) Delete(req item.ItemIdTodoIdRequestUri) (*item.ItemIdResult, e
 	return &item.ItemIdResult{
 		Id: *itemId,
 	}, nil
+}
+
+func (s *Service) GetItemsByTodoId(todoId int) ([]models.Item, error) {
+	return s.repo.GetItemsByTodoId(todoId)
 }

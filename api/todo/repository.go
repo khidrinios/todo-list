@@ -1,8 +1,10 @@
 package todo
 
 import (
+	iterface "khidr/todo/interfaces/api/todo"
 	"khidr/todo/models"
 	"strings"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -55,13 +57,13 @@ func (p *Repository) UpdateTodo(id int, title, description *string, isDone *bool
 	return &todo, nil
 }
 
-func (p *Repository) QueryTodos(req models.QueryTodosRequest) ([]models.Todo, error) {
+func (p *Repository) QueryTodos(req iterface.QueryTodosRequest) ([]models.Todo, error) {
 	var todos []models.Todo
 	queryTodo := models.Todo{}
 	if req.IsDone != nil {
 		queryTodo.IsDone = *req.IsDone
 	}
-	filter := BuildTitleAndDescriptionSqlFilterString(req.Title, req.Description)
+	filter := BuildSqlFilterString(req.Title, req.Description, req.From, req.To)
 	result := p.db.Model(&models.Todo{}).Where(filter).Limit(req.Limit).Offset(req.Offset).Find(&todos)
 
 	if result.Error != nil {
@@ -78,7 +80,7 @@ func (p *Repository) DeleteTodoById(id int) (*int, error) {
 	return &id, nil
 }
 
-func BuildTitleAndDescriptionSqlFilterString(title, description *string) string {
+func BuildSqlFilterString(title, description *string, from, to *time.Time) string {
 	var sb strings.Builder
 	if title != nil {
 		sb.WriteString("title LIKE '%")
@@ -94,5 +96,24 @@ func BuildTitleAndDescriptionSqlFilterString(title, description *string) string 
 		sb.WriteString(*description)
 		sb.WriteString("%'")
 	}
+
+	if from != nil {
+		if title != nil || description != nil {
+			sb.WriteString(" AND ")
+		}
+		sb.WriteString("created_at >= '")
+		sb.WriteString((*from).Format(time.RFC3339))
+		sb.WriteString("'")
+	}
+
+	if to != nil {
+		if title != nil || description != nil || from != nil {
+			sb.WriteString(" AND ")
+		}
+		sb.WriteString("created_at <= '")
+		sb.WriteString((*to).Format(time.RFC3339))
+		sb.WriteString("'")
+	}
+
 	return sb.String()
 }

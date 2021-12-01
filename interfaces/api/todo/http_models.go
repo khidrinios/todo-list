@@ -34,7 +34,7 @@ type TodoResult struct {
 	Items       []Item    `json:"items"`
 }
 
-type QueryTodosRequestBody struct {
+type ListRequestBody struct {
 	Description *string `json:"description,omitempty"`
 	IsDone      *bool   `json:"is_done,omitempty"`
 	Limit       int     `json:"limit" binding:"required,min=1,max=1000"`
@@ -55,4 +55,14 @@ type UpdateTodoResult struct {
 	IsDone      bool      `json:"is_done" binding:"required"`
 	Title       string    `json:"title" binding:"required"`
 	UpdatedAt   time.Time `json:"updated_at" binding:"required"`
+}
+
+type QueryTodosRequest struct {
+	Title       *string
+	Description *string
+	IsDone      *bool
+	From        *time.Time
+	To          *time.Time
+	Offset      int
+	Limit       int
 }

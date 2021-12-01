@@ -33,7 +33,7 @@ func InitAPI(dsn string) *gin.Engine {
 	itemHandler := item.NewHandler()
 
 	//init controllers
-	todoController := todo.NewController(todoSvc, todoHandler)
+	todoController := todo.NewController(todoSvc, itemSvc, todoHandler)
 	itemController := item.NewController(itemSvc, itemHandler)
 
 	//init routers

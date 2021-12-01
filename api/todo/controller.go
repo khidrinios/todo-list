@@ -3,7 +3,8 @@ package todo
 import (
 	"errors"
 	"khidr/todo/api"
-	"khidr/todo/interfaces/api/todo"
+	itemI "khidr/todo/interfaces/api/item"
+	todoI "khidr/todo/interfaces/api/todo"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,12 +13,14 @@ import (
 
 type Controller struct {
 	handler Handler
-	service todo.Service
+	todoSvc todoI.Service
+	itemSvc itemI.Service
 }
 
-func NewController(service todo.Service, handler Handler) Controller {
+func NewController(todoSvc todoI.Service, itemSvc itemI.Service, handler Handler) Controller {
 	return Controller{
-		service: service,
+		todoSvc: todoSvc,
+		itemSvc: itemSvc,
 		handler: handler,
 	}
 }
@@ -28,11 +31,17 @@ func (ctrl Controller) Create(c *gin.Context) {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
-
-	res, err := ctrl.service.Create(req)
+	todoId, err := ctrl.todoSvc.Create(req)
 	if err != nil {
+		if _, ok := err.(ValidationError); ok {
+			api.HandleResponseError(c, http.StatusUnprocessableEntity, err)
+			return
+		}
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
+	}
+	res := todoI.TodoIdResult{
+		Id: *todoId,
 	}
 	api.HandleResponse(c, http.StatusCreated, res)
 }
@@ -43,7 +52,7 @@ func (ctrl Controller) GetById(c *gin.Context) {
 		api.HandleResponseError(c, http.StatusBadRequest, err)
 		return
 	}
-	res, err := ctrl.service.GetById(req)
+	res, err := ctrl.todoSvc.GetById(req)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			api.HandleResponseError(c, http.StatusNotFound, err)
@@ -52,7 +61,33 @@ func (ctrl Controller) GetById(c *gin.Context) {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	api.HandleResponse(c, http.StatusOK, res)
+	items, err := ctrl.itemSvc.GetItemsByTodoId(req.ID)
+	if err != nil {
+		api.HandleResponseError(c, http.StatusInternalServerError, err)
+		return
+	}
+	itemsRes := make([]todoI.Item, len(items))
+	for i := range items {
+		itemRes := todoI.Item{
+			CreatedAt:   items[i].CreatedAt,
+			Description: items[i].Description,
+			Id:          int(items[i].ID),
+			IsDone:      items[i].IsDone,
+			Title:       items[i].Title,
+			UpdatedAt:   items[i].UpdatedAt,
+		}
+		itemsRes = append(itemsRes, itemRes)
+	}
+	todoRes := todoI.TodoResult{
+		CreatedAt:   res.CreatedAt,
+		Description: res.Description,
+		Id:          req.ID,
+		IsDone:      res.IsDone,
+		Title:       res.Title,
+		UpdatedAt:   res.UpdatedAt,
+		Items:       itemsRes,
+	}
+	api.HandleResponse(c, http.StatusOK, todoRes)
 }
 
 func (ctrl Controller) List(c *gin.Context) {
@@ -62,14 +97,14 @@ func (ctrl Controller) List(c *gin.Context) {
 		return
 	}
 
-	res, err := ctrl.service.List(req)
+	res, err := ctrl.todoSvc.List(req)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
 	}
-	todosRes := make([]todo.TodoResult, len(res))
+	todosRes := make([]todoI.TodoResult, len(res))
 	for i := range res {
-		todoRes := todo.TodoResult{
+		todoRes := todoI.TodoResult{
 			CreatedAt:   res[i].CreatedAt,
 			Description: res[i].Description,
 			Id:          int(res[i].ID),
@@ -89,10 +124,13 @@ func (ctrl Controller) DeleteById(c *gin.Context) {
 		return
 	}
 
-	res, err := ctrl.service.DeleteById(req)
+	todoId, err := ctrl.todoSvc.DeleteById(req)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
+	}
+	res := todoI.TodoIdResult{
+		Id: *todoId,
 	}
 	api.HandleResponse(c, http.StatusOK, res)
 }
@@ -104,10 +142,18 @@ func (ctrl Controller) Update(c *gin.Context) {
 		return
 	}
 
-	res, err := ctrl.service.Update(*reqParam, *reqBody)
+	todo, err := ctrl.todoSvc.Update(*reqParam, *reqBody)
 	if err != nil {
 		api.HandleResponseError(c, http.StatusInternalServerError, err)
 		return
+	}
+	res := todoI.UpdateTodoResult{
+		CreatedAt:   todo.CreatedAt,
+		Description: todo.Description,
+		Id:          int(todo.ID),
+		IsDone:      todo.IsDone,
+		Title:       todo.Title,
+		UpdatedAt:   todo.UpdatedAt,
 	}
 	api.HandleResponse(c, http.StatusOK, res)
 }

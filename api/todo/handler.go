@@ -24,8 +24,8 @@ func (h Handler) GetById(c *gin.Context) (todo.TodoByIdRequestUri, error) {
 	return *request, err
 }
 
-func (h Handler) List(c *gin.Context) (todo.QueryTodosRequestBody, error) {
-	request := new(todo.QueryTodosRequestBody)
+func (h Handler) List(c *gin.Context) (todo.ListRequestBody, error) {
+	request := new(todo.ListRequestBody)
 	err := c.ShouldBindJSON(request)
 	return *request, err
 }

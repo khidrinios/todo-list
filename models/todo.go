@@ -26,11 +26,3 @@ type Item struct {
 	TodoID      int `gorm:"primarykey"`
 	Todo        Todo
 }
-
-type QueryTodosRequest struct {
-	Title       *string
-	Description *string
-	IsDone      *bool
-	Offset      int
-	Limit       int
-}
