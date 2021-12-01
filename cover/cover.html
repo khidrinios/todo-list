@@ -1,0 +1,529 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>todo: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">khidr/todo/api/todo/controller.go (0.0%)</option>
+				
+				<option value="file1">khidr/todo/api/todo/handler.go (0.0%)</option>
+				
+				<option value="file2">khidr/todo/api/todo/repository.go (23.3%)</option>
+				
+				<option value="file3">khidr/todo/api/todo/service.go (61.5%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package todo
+
+import (
+        "errors"
+        "khidr/todo/api"
+        itemI "khidr/todo/interfaces/api/item"
+        todoI "khidr/todo/interfaces/api/todo"
+        "net/http"
+
+        "github.com/gin-gonic/gin"
+        "gorm.io/gorm"
+)
+
+type Controller struct {
+        handler Handler
+        todoSvc todoI.Service
+        itemSvc itemI.Service
+}
+
+func NewController(todoSvc todoI.Service, itemSvc itemI.Service, handler Handler) Controller <span class="cov0" title="0">{
+        return Controller{
+                todoSvc: todoSvc,
+                itemSvc: itemSvc,
+                handler: handler,
+        }
+}</span>
+
+func (ctrl Controller) Create(c *gin.Context) <span class="cov0" title="0">{
+        req, err := ctrl.handler.Create(c)
+        if err != nil </span><span class="cov0" title="0">{
+                api.HandleResponseError(c, http.StatusBadRequest, err)
+                return
+        }</span>
+        <span class="cov0" title="0">todoId, err := ctrl.todoSvc.Create(req)
+        if err != nil </span><span class="cov0" title="0">{
+                if _, ok := err.(ValidationError); ok </span><span class="cov0" title="0">{
+                        api.HandleResponseError(c, http.StatusUnprocessableEntity, err)
+                        return
+                }</span>
+                <span class="cov0" title="0">api.HandleResponseError(c, http.StatusInternalServerError, err)
+                return</span>
+        }
+        <span class="cov0" title="0">res := todoI.TodoIdResult{
+                Id: *todoId,
+        }
+        api.HandleResponse(c, http.StatusCreated, res)</span>
+}
+
+func (ctrl Controller) GetById(c *gin.Context) <span class="cov0" title="0">{
+        req, err := ctrl.handler.GetById(c)
+        if err != nil </span><span class="cov0" title="0">{
+                api.HandleResponseError(c, http.StatusBadRequest, err)
+                return
+        }</span>
+        <span class="cov0" title="0">res, err := ctrl.todoSvc.GetById(req)
+        if err != nil </span><span class="cov0" title="0">{
+                if errors.Is(err, gorm.ErrRecordNotFound) </span><span class="cov0" title="0">{
+                        api.HandleResponseError(c, http.StatusNotFound, err)
+                        return
+                }</span>
+                <span class="cov0" title="0">api.HandleResponseError(c, http.StatusInternalServerError, err)
+                return</span>
+        }
+        <span class="cov0" title="0">items, err := ctrl.itemSvc.GetItemsByTodoId(req.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                api.HandleResponseError(c, http.StatusInternalServerError, err)
+                return
+        }</span>
+        <span class="cov0" title="0">itemsRes := make([]todoI.Item, len(items))
+        for i := range items </span><span class="cov0" title="0">{
+                itemRes := todoI.Item{
+                        CreatedAt:   items[i].CreatedAt,
+                        Description: items[i].Description,
+                        Id:          int(items[i].ID),
+                        IsDone:      items[i].IsDone,
+                        Title:       items[i].Title,
+                        UpdatedAt:   items[i].UpdatedAt,
+                }
+                itemsRes = append(itemsRes, itemRes)
+        }</span>
+        <span class="cov0" title="0">todoRes := todoI.TodoResult{
+                CreatedAt:   res.CreatedAt,
+                Description: res.Description,
+                Id:          req.ID,
+                IsDone:      res.IsDone,
+                Title:       res.Title,
+                UpdatedAt:   res.UpdatedAt,
+                Items:       itemsRes,
+        }
+        api.HandleResponse(c, http.StatusOK, todoRes)</span>
+}
+
+func (ctrl Controller) List(c *gin.Context) <span class="cov0" title="0">{
+        req, err := ctrl.handler.List(c)
+        if err != nil </span><span class="cov0" title="0">{
+                api.HandleResponseError(c, http.StatusBadRequest, err)
+                return
+        }</span>
+
+        <span class="cov0" title="0">res, err := ctrl.todoSvc.List(req)
+        if err != nil </span><span class="cov0" title="0">{
+                api.HandleResponseError(c, http.StatusInternalServerError, err)
+                return
+        }</span>
+        <span class="cov0" title="0">todosRes := make([]todoI.TodoResult, len(res))
+        for i := range res </span><span class="cov0" title="0">{
+                todoRes := todoI.TodoResult{
+                        CreatedAt:   res[i].CreatedAt,
+                        Description: res[i].Description,
+                        Id:          int(res[i].ID),
+                        IsDone:      res[i].IsDone,
+                        Title:       res[i].Title,
+                        UpdatedAt:   res[i].UpdatedAt,
+                }
+                todosRes = append(todosRes, todoRes)
+        }</span>
+        <span class="cov0" title="0">api.HandleResponse(c, http.StatusOK, todosRes)</span>
+}
+
+func (ctrl Controller) DeleteById(c *gin.Context) <span class="cov0" title="0">{
+        req, err := ctrl.handler.DeleteById(c)
+        if err != nil </span><span class="cov0" title="0">{
+                api.HandleResponseError(c, http.StatusBadRequest, err)
+                return
+        }</span>
+
+        <span class="cov0" title="0">todoId, err := ctrl.todoSvc.DeleteById(req)
+        if err != nil </span><span class="cov0" title="0">{
+                api.HandleResponseError(c, http.StatusInternalServerError, err)
+                return
+        }</span>
+        <span class="cov0" title="0">res := todoI.TodoIdResult{
+                Id: *todoId,
+        }
+        api.HandleResponse(c, http.StatusOK, res)</span>
+}
+
+func (ctrl Controller) Update(c *gin.Context) <span class="cov0" title="0">{
+        reqParam, reqBody, err := ctrl.handler.Update(c)
+        if err != nil </span><span class="cov0" title="0">{
+                api.HandleResponseError(c, http.StatusBadRequest, err)
+                return
+        }</span>
+
+        <span class="cov0" title="0">todo, err := ctrl.todoSvc.Update(*reqParam, *reqBody)
+        if err != nil </span><span class="cov0" title="0">{
+                api.HandleResponseError(c, http.StatusInternalServerError, err)
+                return
+        }</span>
+        <span class="cov0" title="0">res := todoI.UpdateTodoResult{
+                CreatedAt:   todo.CreatedAt,
+                Description: todo.Description,
+                Id:          int(todo.ID),
+                IsDone:      todo.IsDone,
+                Title:       todo.Title,
+                UpdatedAt:   todo.UpdatedAt,
+        }
+        api.HandleResponse(c, http.StatusOK, res)</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package todo
+
+import (
+        "khidr/todo/interfaces/api/todo"
+
+        "github.com/gin-gonic/gin"
+)
+
+type Handler struct{}
+
+func NewHandler() Handler <span class="cov0" title="0">{
+        return Handler{}
+}</span>
+
+func (h Handler) Create(c *gin.Context) (todo.CreateRequest, error) <span class="cov0" title="0">{
+        request := new(todo.CreateRequest)
+        err := c.ShouldBindJSON(request)
+        return *request, err
+}</span>
+
+func (h Handler) GetById(c *gin.Context) (todo.TodoByIdRequestUri, error) <span class="cov0" title="0">{
+        request := new(todo.TodoByIdRequestUri)
+        err := c.ShouldBindUri(request)
+        return *request, err
+}</span>
+
+func (h Handler) List(c *gin.Context) (todo.ListRequestBody, error) <span class="cov0" title="0">{
+        request := new(todo.ListRequestBody)
+        err := c.ShouldBindJSON(request)
+        return *request, err
+}</span>
+
+func (h Handler) DeleteById(c *gin.Context) (todo.TodoByIdRequestUri, error) <span class="cov0" title="0">{
+        request := new(todo.TodoByIdRequestUri)
+        err := c.ShouldBindUri(request)
+        return *request, err
+}</span>
+
+func (h Handler) Update(c *gin.Context) (*todo.TodoByIdRequestUri, *todo.UpdateTodoRequestBody, error) <span class="cov0" title="0">{
+        requestParam := new(todo.TodoByIdRequestUri)
+        err := c.ShouldBindUri(requestParam)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, nil, err
+        }</span>
+        <span class="cov0" title="0">requestBody := new(todo.UpdateTodoRequestBody)
+        err = c.ShouldBindJSON(requestBody)
+        return requestParam, requestBody, err</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package todo
+
+import (
+        iterface "khidr/todo/interfaces/api/todo"
+        "khidr/todo/models"
+        "strings"
+        "time"
+
+        "gorm.io/gorm"
+        "gorm.io/gorm/clause"
+)
+
+type Repository struct {
+        db *gorm.DB
+}
+
+func NewRepository(d *gorm.DB) *Repository <span class="cov0" title="0">{
+        return &amp;Repository{
+                db: d,
+        }
+}</span>
+
+func (p *Repository) Create(todo models.Todo) (*int, error) <span class="cov0" title="0">{
+        result := p.db.Create(&amp;todo)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return nil, result.Error
+        }</span>
+        <span class="cov0" title="0">todoId := int(todo.ID)
+        return &amp;todoId, nil</span>
+}
+
+func (p *Repository) GetTodoById(id int) (*models.Todo, error) <span class="cov0" title="0">{
+        todo := models.Todo{}
+        result := p.db.First(&amp;todo, id)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return nil, result.Error
+        }</span>
+        <span class="cov0" title="0">return &amp;todo, nil</span>
+}
+
+func (p *Repository) UpdateTodo(id int, title, description *string, isDone *bool) (*models.Todo, error) <span class="cov0" title="0">{
+        todo := models.Todo{ID: uint(id)}
+        updateBody := models.Todo{}
+        if title != nil </span><span class="cov0" title="0">{
+                updateBody.Title = *title
+        }</span>
+        <span class="cov0" title="0">if description != nil </span><span class="cov0" title="0">{
+                updateBody.Description = description
+        }</span>
+        <span class="cov0" title="0">if isDone != nil </span><span class="cov0" title="0">{
+                updateBody.IsDone = *isDone
+        }</span>
+        <span class="cov0" title="0">result := p.db.Model(&amp;todo).Clauses(clause.Returning{}).Updates(updateBody)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return nil, result.Error
+        }</span>
+        <span class="cov0" title="0">return &amp;todo, nil</span>
+}
+
+func (p *Repository) QueryTodos(req iterface.QueryTodosRequest) ([]models.Todo, error) <span class="cov0" title="0">{
+        var todos []models.Todo
+        queryTodo := models.Todo{}
+        if req.IsDone != nil </span><span class="cov0" title="0">{
+                queryTodo.IsDone = *req.IsDone
+        }</span>
+        <span class="cov0" title="0">filter := BuildSqlFilterString(req.Title, req.Description, req.From, req.To)
+        result := p.db.Model(&amp;models.Todo{}).Where(filter).Limit(req.Limit).Offset(req.Offset).Find(&amp;todos)
+
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return nil, result.Error
+        }</span>
+        <span class="cov0" title="0">return todos, nil</span>
+}
+
+func (p *Repository) DeleteTodoById(id int) (*int, error) <span class="cov0" title="0">{
+        result := p.db.Delete(&amp;models.Todo{}, id)
+        if result.Error != nil </span><span class="cov0" title="0">{
+                return nil, result.Error
+        }</span>
+        <span class="cov0" title="0">return &amp;id, nil</span>
+}
+
+func BuildSqlFilterString(title, description *string, from, to *time.Time) string <span class="cov8" title="1">{
+        var sb strings.Builder
+        if title != nil </span><span class="cov8" title="1">{
+                sb.WriteString("title LIKE '%")
+                sb.WriteString(*title)
+                sb.WriteString("%'")
+        }</span>
+
+        <span class="cov8" title="1">if description != nil </span><span class="cov8" title="1">{
+                if title != nil </span><span class="cov8" title="1">{
+                        sb.WriteString(" AND ")
+                }</span>
+                <span class="cov8" title="1">sb.WriteString("description LIKE '%")
+                sb.WriteString(*description)
+                sb.WriteString("%'")</span>
+        }
+
+        <span class="cov8" title="1">if from != nil </span><span class="cov0" title="0">{
+                if title != nil || description != nil </span><span class="cov0" title="0">{
+                        sb.WriteString(" AND ")
+                }</span>
+                <span class="cov0" title="0">sb.WriteString("created_at &gt;= '")
+                sb.WriteString((*from).Format(time.RFC3339))
+                sb.WriteString("'")</span>
+        }
+
+        <span class="cov8" title="1">if to != nil </span><span class="cov0" title="0">{
+                if title != nil || description != nil || from != nil </span><span class="cov0" title="0">{
+                        sb.WriteString(" AND ")
+                }</span>
+                <span class="cov0" title="0">sb.WriteString("created_at &lt;= '")
+                sb.WriteString((*to).Format(time.RFC3339))
+                sb.WriteString("'")</span>
+        }
+
+        <span class="cov8" title="1">return sb.String()</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package todo
+
+import (
+        "fmt"
+        todoI "khidr/todo/interfaces/api/todo"
+        "khidr/todo/models"
+        "time"
+)
+
+type Service struct {
+        repo todoI.Repository
+}
+
+func NewService(repo todoI.Repository) *Service <span class="cov8" title="1">{
+        return &amp;Service{
+                repo: repo,
+        }
+}</span>
+
+type ValidationError struct {
+        err error
+}
+
+func (v ValidationError) Error() string <span class="cov0" title="0">{
+        return v.err.Error()
+}</span>
+
+func (s *Service) Create(req todoI.CreateRequest) (*int, error) <span class="cov8" title="1">{
+        from, to := GetBeginningAndEndTime(time.Now())
+        queryReq := todoI.QueryTodosRequest{
+                Title: &amp;req.Title,
+                From:  &amp;from,
+                To:    &amp;to,
+        }
+        existingTodos, err := s.repo.QueryTodos(queryReq)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if len(existingTodos) &gt; 0 </span><span class="cov8" title="1">{
+                err := fmt.Errorf("%s already exists", req.Title)
+                validationError := ValidationError{err: err}
+                return nil, validationError
+        }</span>
+
+        <span class="cov8" title="1">todo := models.Todo{
+                Title:       req.Title,
+                Description: req.Description,
+                IsDone:      false,
+        }
+        todoId, err := s.repo.Create(todo)
+        return todoId, err</span>
+}
+
+func GetBeginningAndEndTime(t time.Time) (time.Time, time.Time) <span class="cov8" title="1">{
+        year, month, day := t.Date()
+        from := time.Date(year, month, day, 0, 0, 0, 0, time.UTC)
+        to := from.Add(24 * time.Hour)
+        return from, to
+}</span>
+
+func (s *Service) GetById(req todoI.TodoByIdRequestUri) (*models.Todo, error) <span class="cov0" title="0">{
+        return s.repo.GetTodoById(req.ID)
+}</span>
+
+func (s *Service) List(req todoI.ListRequestBody) ([]models.Todo, error) <span class="cov0" title="0">{
+        offset := getOffsetFromPageAndLimit(req.Page, req.Limit)
+        repoRequest := todoI.QueryTodosRequest{
+                Title:       req.Title,
+                Description: req.Description,
+                IsDone:      req.IsDone,
+                Offset:      offset,
+                Limit:       req.Limit,
+        }
+        return s.repo.QueryTodos(repoRequest)
+}</span>
+
+func getOffsetFromPageAndLimit(page, limit int) int <span class="cov0" title="0">{
+        offset := (page - 1) * limit
+        return offset
+}</span>
+
+func (s *Service) DeleteById(req todoI.TodoByIdRequestUri) (*int, error) <span class="cov0" title="0">{
+        return s.repo.DeleteTodoById(req.ID)
+}</span>
+
+func (s *Service) Update(reqParam todoI.TodoByIdRequestUri, reqbody todoI.UpdateTodoRequestBody) (*models.Todo, error) <span class="cov0" title="0">{
+        return s.repo.UpdateTodo(reqParam.ID, reqbody.Title, reqbody.Description, reqbody.IsDone)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
